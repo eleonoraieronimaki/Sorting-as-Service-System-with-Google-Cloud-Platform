@@ -1,33 +1,42 @@
 from google.cloud import datastore
 
-KIND = "Document"
+KIND = "Job"
 
 def create_client():
     return datastore.Client()
 
-def add_document(client: datastore.Client, filename:str, data: str):
-    kind = KIND
+def add_job(filename:str, data: str):
 
-    name = filename
+    client = create_client()
+
+    kind = KIND
 
     # Create incomplete key
     key = client.key(kind)
 
-    # Creates unsaved document object in the datastore
-    # Excludes description from index
-    document = datastore.Entity(key, exclude_from_indexes=["data"])
-    document["filename"] = filename
-    document["data"] = data
+    # Creates unsaved job object in the datastore
+    job = datastore.Entity(key)
+    job["filename"] = filename
+    
+    # get number of lines
+    nlines = data.count("\n")
 
-    client.put(document)
+    # get job attributes
+    create_job_attributes(job, nlines)
 
-    return document.key.id
+    client.put(job)
 
-def list_documents(client: datastore.Client):
+    return job.key.id
+
+def list_jobs(client: datastore.Client):
     # Create a query against all of your objects of kind "Task"
     query = client.query(kind=KIND)
 
     return list(query.fetch())
 
 
-
+def create_job_attributes(job: datastore.Entity, lines: int):
+    job["sorted"] = False
+    job["perc_sorted"] = 0
+    job["lines"] = lines
+    job["palindromes"] = {}
