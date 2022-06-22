@@ -112,7 +112,7 @@ def sort_worker(event, context):
             if not work["done"]:
                 count_false += 1
         
-        if count_false == (len(results) - 1):
+        if count_false == 1:
             # fix topic
             topic_path = publisher.topic_path(PROJECT_ID, "Reduce")
 

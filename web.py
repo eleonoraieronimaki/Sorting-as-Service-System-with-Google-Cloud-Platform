@@ -4,8 +4,8 @@ import numpy as np
 import datastore, storage, publisher
 import os
  
-SORT_CHUNK = 1000
-PALINDROME_CHUNK = 1000
+SORT_CHUNK = 500
+PALINDROME_CHUNK = 500
 
 app = Flask(__name__)
  
@@ -65,11 +65,14 @@ def create_offsets(text, chunk_len):
         n = text[end:].split('\n')[0]
         prev_offset = len(n)
         end = end+prev_offset
+        if start > l:
+            break
         if end > l:
             end = l
             offsets.append((start, end))
             break
         offsets.append((start, end))
+
     return offsets
 
 if __name__ == "__main__":
