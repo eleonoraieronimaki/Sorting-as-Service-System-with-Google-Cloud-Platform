@@ -5,7 +5,7 @@ KIND = "Job"
 def create_client():
     return datastore.Client()
 
-def add_job(filename:str, data: str):
+def add_job(filename:str, data: str, chunk_sort: int, chunk_pal: int):
 
     client = create_client()
 
@@ -22,10 +22,11 @@ def add_job(filename:str, data: str):
     nlines = data.count("\n")
 
     # get job attributes
-    create_job_attributes(job, nlines)
+    create_job_attributes(job, chunk_sort, chunk_pal)
 
     client.put(job)
-
+    print(job)
+    print(job.key)
     return job.key.id
 
 def list_jobs(client: datastore.Client):
@@ -35,8 +36,21 @@ def list_jobs(client: datastore.Client):
     return list(query.fetch())
 
 
-def create_job_attributes(job: datastore.Entity, lines: int):
+def create_job_attributes(job: datastore.Entity, chunk_sort: int, chunk_pal: int, num_offsets: int):
     job["sorted"] = False
     job["perc_sorted"] = 0
-    job["lines"] = lines
+    job["chunk_sort"] = chunk_sort
+    job["chunk_palindrome"] = chunk_pal
     job["palindromes"] = {}
+    job["sort_workers"] = {}
+    for i in range(num_offsets):
+        job["sort_workers"][str(i)] = "False"
+    job['palindrome_workers'] = {}
+
+    job['reduce'] = {}
+    job['reduce']['running'] = "False"
+    job['reduce']['done'] = "False"
+    
+
+if __name__=="__main__":
+    add_job(filename="test2.txt", data="\n\n", chunk_sort=100, chunk_pal=100)

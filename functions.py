@@ -23,7 +23,7 @@ def txt_rows(text):
     return lines
 
 def sort_txt(section):
-    sorted_txt = sorted(section, key=str.lower)
+    sorted_txt = sorted(section, key=None)
     with open("test_sorted.txt", "w") as txt_file:
         for line in sorted_txt:
             txt_file.write(line + "\n")
