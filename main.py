@@ -102,8 +102,6 @@ def sort_worker(event, context):
         if not job:
             raise ValueError(f"Job {job_id} does not exist.")
 
-        
-
 
         query = datastore_client.query(kind="sort_worker")
         query.add_filter("job_id", "=", int(job_id))
@@ -113,8 +111,6 @@ def sort_worker(event, context):
         for work in results:
             if not work["done"]:
                 count_false += 1
-
-            start_reduce = True
         
         if count_false == (len(results) - 1):
             # fix topic
