@@ -112,7 +112,7 @@ def hello_pubsub(event, context):
 
         if start_reduce:
             # fix topic
-            topic_path = publisher.topic_path(PROJECT_ID, "REDUCE")
+            topic_path = publisher.topic_path(PROJECT_ID, "Reduce")
 
             data = f""
 
