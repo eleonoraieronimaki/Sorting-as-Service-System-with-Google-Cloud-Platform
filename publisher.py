@@ -21,12 +21,12 @@ def sendSorting(job_id, obj_name, offsets):
 
         data = data.encode("utf-8")
 
-        start = str(chunk[0]).encode("utf-8")
-        end = str(chunk[1]).encode("utf-8")
+        start = str(chunk[0])
+        end = str(chunk[1])
         obj = obj_name
 
         future = publisher.publish(
-            topic_path, data, job=job_id, obj=obj_name, start_offset=start, end_offset=end, worker_id=i
+            topic_path, data, job=str(job_id), obj=obj_name, start_offset=start, end_offset=end, worker_id=str(i)
         )
         publish_futures.append(future.result())
     

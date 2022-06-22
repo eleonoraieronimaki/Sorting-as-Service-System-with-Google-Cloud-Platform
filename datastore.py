@@ -1,11 +1,12 @@
 from google.cloud import datastore
 
 KIND = "Job"
+SORT_WORKER = "sort_worker"
 
 def create_client():
     return datastore.Client()
 
-def add_job(filename:str, data: str, chunk_sort: int, chunk_pal: int):
+def add_job(filename:str, data: str, chunk_sort: int, chunk_pal: int, num_offsets: int):
 
     client = create_client()
 
@@ -22,12 +23,33 @@ def add_job(filename:str, data: str, chunk_sort: int, chunk_pal: int):
     nlines = data.count("\n")
 
     # get job attributes
-    create_job_attributes(job, chunk_sort, chunk_pal)
+    create_job_attributes(job, chunk_sort, chunk_pal, num_offsets)
 
     client.put(job)
-    print(job)
-    print(job.key)
-    return job.key.id
+
+    job_key = job.key.id
+
+    create_worker_docs(client, job_key, num_offsets)
+
+    return job_key
+
+def create_worker_docs(client: datastore.Client, job_id: int, num_offsets: int):
+    kind = SORT_WORKER
+    
+    worker_list = []
+    client = create_client()
+
+    for i in range(num_offsets):
+        key = client.key(kind)
+
+        worker = datastore.Entity(key)
+        worker["worker_num"] = i
+        worker["job_id"] = job_id
+        worker["done"] = False
+        client.put(worker)
+        worker_list.append(worker.key.id)
+    
+    return worker_list
 
 def list_jobs(client: datastore.Client):
     # Create a query against all of your objects of kind "Task"

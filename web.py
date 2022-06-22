@@ -4,8 +4,8 @@ import numpy as np
 import datastore, storage, publisher
 import os
  
-SORT_CHUNK = 500
-PALINDROME_CHUNK = 200
+SORT_CHUNK = 1000
+PALINDROME_CHUNK = 1000
 
 app = Flask(__name__)
  
@@ -24,7 +24,7 @@ def upload_file():
         content = request.files['file'].read()
         content = content.decode("utf-8")
         offsets = create_offsets(content, SORT_CHUNK)
-        result = handle_storage(filename=filename, content=content, chunk_sort=SORT_CHUNK, chunk_palindrome=PALINDROME_CHUNK)
+        result = handle_storage(filename=filename, content=content, chunk_sort=SORT_CHUNK, chunk_palindrome=PALINDROME_CHUNK, num_offsets=len(offsets))
         job_id = result[0]
         destination_name = result[1]
         sorting_messages = publisher.sendSorting(job_id=job_id, obj_name=destination_name, offsets=offsets)
@@ -40,8 +40,8 @@ def data():
     print(content)
     return "hello"
 
-def handle_storage(filename: str, content: str, chunk_sort: int, chunk_palindrome: int):
-    job_id = datastore.add_job(filename, content, chunk_sort, chunk_palindrome)
+def handle_storage(filename: str, content: str, chunk_sort: int, chunk_palindrome: int, num_offsets: int):
+    job_id = datastore.add_job(filename, content, chunk_sort, chunk_palindrome, num_offsets)
     
     if job_id is Empty or job_id is None:
         return False

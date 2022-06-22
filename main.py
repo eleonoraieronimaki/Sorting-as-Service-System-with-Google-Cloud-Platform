@@ -1,11 +1,13 @@
 import os
 import json
+import time
 
 from google.cloud import pubsub_v1
 from google.cloud import datastore, storage
+from google.cloud.exceptions import Conflict
 
 
-def hello_pubsub(event, context):
+def sort_worker(event, context):
     """Background Cloud Function to be triggered by Pub/Sub.
     Args:
          event (dict):  The dictionary with data specific to this type of
@@ -26,10 +28,9 @@ def hello_pubsub(event, context):
     Returns:
         None. The output is written to Cloud Logging.
     """
-    PROJECT_ID = os.getenv('GOOGLE_CLOUD_PROJECT')
-
-    datastore_client = datastore.Client()
     publisher = pubsub_v1.PublisherClient()
+    PROJECT_ID = 'saas-0101'
+    datastore_client = datastore.Client()
 
     # The ID of your GCS bucket
     bucket_name = "saas-docs"
@@ -57,12 +58,11 @@ def hello_pubsub(event, context):
     contents = contents.decode("utf-8")
     # get lines
     lines = contents.split('\n')
-
+    lines = list(filter(None, lines))
     # sort lines
     sorted_txt = sorted(lines, key=None)
 
     sorted_contents = '\n'.join(sorted_txt)
-
     # create new name with subfolder for sorting result
     blob_parts = blob_name.split('/')
     ch = '.'
@@ -77,6 +77,18 @@ def hello_pubsub(event, context):
 
     start_reduce = False
 
+    query = datastore_client.query(kind="sort_worker")
+    query.add_filter("job_id", "=", int(job_id))
+    query.add_filter("worker_num", "=", int(worker_id))
+    results = list(query.fetch())
+
+    me = results[0]
+    
+    # set our worker document to done, we will store it in the end
+    me["done"] = True
+    print(me)
+
+
     # go to datastore (jobs) in order to update the job
     with datastore_client.transaction():
         # Create a key for an entity of kind "Task", and with the supplied
@@ -90,34 +102,27 @@ def hello_pubsub(event, context):
         if not job:
             raise ValueError(f"Job {job_id} does not exist.")
 
-        # get dictionary for sorting
-        sort_workers = json.loads(json.dumps(job["sort_workers"]))
+        
 
-        # we need to edit this, to say that we are done
-        sort_workers[str(worker_id)] = "True"
 
-        # replace the old dictionary
-        job["sort_workers"] = sort_workers
+        query = datastore_client.query(kind="sort_worker")
+        query.add_filter("job_id", "=", int(job_id))
+        results = list(query.fetch())
 
-        # check if we are the last one, we might need to trigger the reduce phase
-        for key,value in sort_workers.items():
-            # no need to do something if we find someone still false
-            if value == "False":
-                start_reduce = False
-                break
+        count_false = 0
+        for work in results:
+            if not work["done"]:
+                count_false += 1
 
-            # if we come here, we did not find any False
-            # set a boolean to indicate that we need to start the reduce phase
             start_reduce = True
-
-        if start_reduce:
+        
+        if count_false == (len(results) - 1):
             # fix topic
             topic_path = publisher.topic_path(PROJECT_ID, "Reduce")
 
             data = f""
 
             data = data.encode("utf-8")
-
             # Publishes a message
             try:
                 publish_future = publisher.publish(topic_path, data=data, job=job_id, obj=blob_name)
@@ -130,10 +135,11 @@ def hello_pubsub(event, context):
             reduce = json.loads(json.dumps(job["reduce"]))
             
             # set reduce in the dictionary
-            reduce['reduce']['running'] = "True"
+            reduce['running'] = "True"
 
             # set it in the job
             job["reduce"] = reduce
 
-        # store job back
-        datastore_client.put(job)
+            datastore_client.put(job)
+        
+    datastore_client.put(me)
