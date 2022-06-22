@@ -30,13 +30,6 @@ def sort_txt(section):
 
 
 
-if __name__ == "__main__":
-    text = read_txt("test.txt")
-    n_palindromes, max_len = palindrome(text)
-    text_rows = txt_rows("test.txt")
-    sort_txt(text_rows)
-
-
 #  Python program to merge two sorted arrays
 # using maps
 import bisect
@@ -47,8 +40,7 @@ def reduce(sorted1, sorted2):
     # using map as a inbuilt tool
     # to store elements in sorted order.
     mp=[]
-
-     
+  
     # Inserting values to a map.
     for i in range(len(sorted1)):
         bisect.insort(mp, sorted1[i])
@@ -64,3 +56,12 @@ def reduce(sorted1, sorted2):
     sorted = ' '.join(sorted)
 
     return sorted
+
+
+if __name__ == "__main__":
+    text = read_txt("test.txt")
+    n_palindromes, max_len = palindrome(text)
+    text_rows = txt_rows("test.txt")
+    sort_txt(text_rows)
+
+
