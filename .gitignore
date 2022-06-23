@@ -163,7 +163,7 @@ cython_debug/
 *.txt
 
 .DS_STORE
-.pdf
+*.pdf
 data/
 
 note.ipynb
