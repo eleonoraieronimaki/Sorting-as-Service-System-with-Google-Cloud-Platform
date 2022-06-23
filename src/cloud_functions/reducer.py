@@ -1,16 +1,11 @@
 from bisect import bisect
-import os
-import json
 import bisect
 import queue
 
-from google.cloud import pubsub_v1
 from google.cloud import datastore, storage
 
 def reducer(event, context):
 
-    publisher = pubsub_v1.PublisherClient()
-    PROJECT_ID = 'saas-0101'
     datastore_client = datastore.Client()
 
     # The ID of your GCS bucket
@@ -66,6 +61,23 @@ def reducer(event, context):
 
     blob.upload_from_string(final)
 
+    # we need to update job document to say that the reducer is done
+
+     # go to datastore (jobs) in order to update the job
+    with datastore_client.transaction():
+        # Create a key for an entity of kind "Task", and with the supplied
+        # `task_id` as its Id
+        key = datastore_client.key("Job", int(job_id))
+
+        # Use that key to load the entity
+        job = datastore_client.get(key)
+
+        # check if job exists. It should never go here..
+        if not job:
+            raise ValueError(f"Job {job_id} does not exist.")
+
+        job["sorting_done"] = True
+        datastore_client.put(job)
 
 
 def reduce(sorted1, sorted2):

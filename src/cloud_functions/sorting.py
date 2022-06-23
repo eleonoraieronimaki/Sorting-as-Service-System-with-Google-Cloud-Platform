@@ -1,6 +1,4 @@
-import os
 import json
-import time
 
 from google.cloud import pubsub_v1
 from google.cloud import datastore, storage
@@ -86,8 +84,6 @@ def sort_worker(event, context):
     
     # set our worker document to done, we will store it in the end
     me["done"] = True
-    print(me)
-
 
     # go to datastore (jobs) in order to update the job
     with datastore_client.transaction():

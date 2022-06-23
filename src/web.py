@@ -9,7 +9,7 @@ PALINDROME_CHUNK = 500
 
 app = Flask(__name__)
  
-@app.route('/form')
+@app.route('/')
 def form():
     return render_template('form.html')
 
@@ -27,7 +27,8 @@ def upload_file():
         result = handle_storage(filename=filename, content=content, chunk_sort=SORT_CHUNK, chunk_palindrome=PALINDROME_CHUNK, num_offsets=len(offsets))
         job_id = result[0]
         destination_name = result[1]
-        sorting_messages = publisher.sendSorting(job_id=job_id, obj_name=destination_name, offsets=offsets)
+        sorting_messages = publisher.sendMessages(mode="sort", job_id=job_id, obj_name=destination_name, offsets=offsets)
+        palindrome_messages = publisher.sendMessages(mode="palindrome", job_id=job_id, obj_name=destination_name, offsets=offsets)
         if result == False:
             return "Failed to upload object"
         

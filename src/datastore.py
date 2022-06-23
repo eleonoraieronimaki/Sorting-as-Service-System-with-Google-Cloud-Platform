@@ -1,7 +1,9 @@
 from google.cloud import datastore
 
+
 KIND = "Job"
 SORT_WORKER = "sort_worker"
+PALINDROME_WORKER = "palindrome_worker"
 
 def create_client():
     return datastore.Client()
@@ -29,19 +31,25 @@ def add_job(filename:str, data: str, chunk_sort: int, chunk_pal: int, num_offset
 
     job_key = job.key.id
 
-    create_worker_docs(client, job_key, num_offsets)
+    create_worker_docs(client, "sort", job_key, num_offsets)
+    create_worker_docs(client, "palindrome", job_key, num_offsets)
+
 
     return job_key
 
-def create_worker_docs(client: datastore.Client, job_id: int, num_offsets: int):
-    kind = SORT_WORKER
+def create_worker_docs(client: datastore.Client, worker_type: str, job_id: int, num_offsets: int):
+    kind = ''
+
+    if worker_type == "sort":
+        kind = SORT_WORKER
+    else:
+        kind = PALINDROME_WORKER
     
     worker_list = []
     client = create_client()
 
     for i in range(num_offsets):
         key = client.key(kind)
-
         worker = datastore.Entity(key)
         worker["worker_num"] = i
         worker["job_id"] = job_id
