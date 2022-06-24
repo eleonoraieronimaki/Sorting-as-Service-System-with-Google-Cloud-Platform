@@ -1,9 +1,12 @@
 <html>
+   <head><h2 style="text-align:center;">Welcome to SaaS!</h2> </head>
    <body>
       <form action = "http://localhost:5001/uploader" method = "POST" 
          enctype = "multipart/form-data">
          <input type = "file" name = "file" />
-         <input type = "submit"/>
-      </form>   
-   </body>
+         <input type = "submit" value="Upload"/>
+      </form>
+      <label for="search"><h3>Search job ID here:</h3></label>
+      <input type="text" id="searchid" name="searchid"/> <input type="submit" value="Submit"/> 
+   </body> 
 </html>
