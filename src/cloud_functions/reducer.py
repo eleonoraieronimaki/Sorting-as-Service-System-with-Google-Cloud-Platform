@@ -21,6 +21,17 @@ def reducer(event, context):
     # The ID of your GCS object
     blob_name = attributes["obj"]
 
+    kind = "sort_reducer"
+
+    # Create incomplete key
+    key = datastore_client.key(kind)
+
+    # Creates unsaved job object in the datastore
+    reducer = datastore.Entity(key)
+    reducer["job_id"] = int(job_id)
+    reducer["perc"] = 0
+    datastore_client.put(reducer)
+
     # Get storage client
     storage_client = storage.Client()
     # The bucket for retrieving objects
@@ -38,6 +49,8 @@ def reducer(event, context):
         contents = obj.download_as_string().decode("utf-8")
         q.put(contents)
         docs.append(contents)
+    
+    total = q.qsize()
 
     while q.qsize() > 2:
         d1 = q.get()
@@ -48,7 +61,12 @@ def reducer(event, context):
 
         d12 = reduce(lines1, lines2)
         q.put(d12)
-    
+
+        perc = q.qsize() * 100 / total
+        reducer["perc"] = perc
+        datastore_client.put(reducer)
+
+
     d1 = q.get()
     d2 = q.get()
 
@@ -80,15 +98,21 @@ def reducer(event, context):
 
         job["sorting_done"] = True
 
-        for _ in range(5):
+        for i in range(10):
             try:
+                time.sleep(10)
                 datastore_client.put(job)
-                time.sleep(5)
                 break
             except Conflict:
                 continue
-            else:
-                print("Transaction failed.")
+            except Exception:
+                continue
+        else:
+            print("Transaction failed.")
+    
+    reducer["perc"] = 100
+    reducer["end_time"] = time.time()
+    datastore_client.put(reducer)
 
 def reduce(sorted1, sorted2):
     # Declaring a map.

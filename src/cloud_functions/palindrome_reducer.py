@@ -18,6 +18,17 @@ def palindrome_reducer(event, context):
     # The ID of your GCS object
     blob_name = attributes["obj"]
 
+    kind = 'palindrome_reducer'
+
+    # Create incomplete key
+    key = datastore_client.key(kind)
+
+    # Creates unsaved job object in the datastore
+    reducer = datastore.Entity(key)
+    reducer["job_id"] = int(job_id)
+    reducer["perc"] = 0
+    datastore_client.put(reducer)
+
     query = datastore_client.query(kind="palindrome_worker")
     query.add_filter("job_id", "=", int(job_id))
     query_results = list(query.fetch())
@@ -26,11 +37,16 @@ def palindrome_reducer(event, context):
     count = 0
     word = ''
 
-    for worker in query_results:
+    for index, worker in enumerate(query_results):
         if worker["longest"] > longest:
             longest = worker["longest"]
             word = worker["word"]
         count += worker["count"]
+
+        if index >= (len(query_results) / 2):
+            reducer["perc"] = 50
+            datastore_client.put(reducer)
+            
     
     # go to datastore (jobs) in order to update the job
     with datastore_client.transaction():
@@ -53,12 +69,19 @@ def palindrome_reducer(event, context):
         job["palindromes"] = palindromes
         job["palindrome_done"] = True
 
-        for _ in range(5):
+        for i in range(5):
             try:
                 datastore_client.put(job)
-                time.sleep(5)
+                time.sleep(2)
                 break
             except Conflict:
                 continue
-            else:
-                print("Transaction failed.")
+            except Exception:
+                continue
+        else:
+            print("Transaction failed.")
+
+
+    reducer["perc"] = 100
+    reducer["end_time"] = time.time()
+    datastore_client.put(reducer)

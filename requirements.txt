@@ -1,47 +1,13 @@
-cachetools==5.2.0
-certifi==2022.5.18.1
-charset-normalizer==2.0.12
-click @ file:///opt/concourse/worker/volumes/live/2d66025a-4d79-47c4-43be-6220928b6c82/volume/click_1646056610594/work
-cloudevents==1.2.0
-deprecation==2.1.0
-Flask @ file:///opt/conda/conda-bld/flask_1648041541647/work
-functions-framework==3.0.0
-google-api-core==2.8.1
-google-api-python-client==2.49.0
-google-auth==2.6.6
-google-auth-httplib2==0.1.0
-google-auth-oauthlib==0.5.1
-google-cloud-core==2.3.0
-google-cloud-datastore==2.4.0
+Flask==2.1.2
+numpy==1.22.4
+protobuf==3.20.1
+google-api-core==2.8.2
+google-auth==2.8.0
+google-cloud-core==2.3.1
+google-cloud-datastore==2.7.1
+google-cloud-pubsub==2.13.0
 google-cloud-storage==2.3.0
 google-crc32c==1.3.0
 google-resumable-media==2.3.3
 googleapis-common-protos==1.56.2
-grpcio==1.46.3
-grpcio-status==1.46.3
-gunicorn==20.1.0
-httplib2==0.20.4
-idna==3.3
-itsdangerous @ file:///tmp/build/80754af9/itsdangerous_1621432558163/work
-Jinja2 @ file:///opt/conda/conda-bld/jinja2_1647436528585/work
-libcst==0.4.3
-MarkupSafe @ file:///Users/builder/ci_310/markupsafe_1642534112998/work
-mypy-extensions==0.4.3
-oauthlib==3.2.0
-packaging==21.3
-proto-plus==1.20.5
-protobuf==3.20.1
-pyasn1==0.4.8
-pyasn1-modules==0.2.8
-pyparsing==3.0.9
-PyYAML==6.0
-requests==2.27.1
-requests-oauthlib==1.3.1
-rsa==4.8
-six==1.16.0
-typing-inspect==0.7.1
-typing_extensions==4.2.0
-uritemplate==4.1.1
-urllib3==1.26.9
-watchdog==1.0.2
-Werkzeug @ file:///opt/conda/conda-bld/werkzeug_1645628268370/work
+grpc-google-iam-v1==0.12.4

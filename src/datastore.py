@@ -1,5 +1,5 @@
 from google.cloud import datastore
-
+import time
 
 KIND = "Job"
 SORT_WORKER = "sort_worker"
@@ -76,10 +76,62 @@ def create_job_attributes(job: datastore.Entity, chunk_sort: int, chunk_pal: int
     for i in range(num_offsets):
         job["sort_workers"][str(i)] = "False"
     job['palindrome_workers'] = {}
-
+    job["palindrome_done"] = False
+    job["sorting_done"] = False
     job['reduce'] = {}
     job['reduce']['running'] = "False"
     job['reduce']['done'] = "False"
+    job["start_time"] = time.time()
+
+def getJob(job_id: int):
+    client = create_client()
+
+    kind = KIND
+
+    key = client.key(kind, int(job_id))
+
+    # Use that key to load the entity
+    job = client.get(key)
+
+    # check if job exists. It should never go here..
+    if not job:
+        return False
+    
+    return job
+
+def getWorkers(job_id):
+    workers = []
+
+    client = create_client()
+
+    query = client.query(kind="palindrome_worker")
+    query.add_filter("job_id", "=", int(job_id))
+    query_results = list(query.fetch()) 
+    workers.append(query_results)
+
+    query = client.query(kind="sort_worker")
+    query.add_filter("job_id", "=", int(job_id))
+    query_results = list(query.fetch())
+    workers.append(query_results)
+
+    return workers
+
+def getReducers(job_id):
+    client = create_client()
+
+    reducers = []
+
+    query = client.query(kind="palindrome_reducer")
+    query.add_filter("job_id", "=", int(job_id))
+    query_results = list(query.fetch()) 
+    reducers.append(query_results)
+
+    query = client.query(kind="sort_reducer")
+    query.add_filter("job_id", "=", int(job_id))
+    query_results = list(query.fetch()) 
+    reducers.append(query_results)
+
+    return reducers
     
 
 if __name__=="__main__":

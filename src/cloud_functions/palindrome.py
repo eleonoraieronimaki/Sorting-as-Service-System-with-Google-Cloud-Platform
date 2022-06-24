@@ -82,7 +82,8 @@ def palindrome_worker(event, context):
                 count_false += 1
         
         if count_false == 1:
-            topic_path = "palindrome_reducer"
+            topic_path = publisher.topic_path(PROJECT_ID, "palindrome_reducer")
+
             data = f""
 
             data = data.encode("utf-8")

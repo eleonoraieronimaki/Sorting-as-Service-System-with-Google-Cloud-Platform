@@ -62,3 +62,12 @@ def list_blobs_with_prefix(bucket_name, prefix, delimiter=None):
         print("Prefixes:")
         for prefix in blobs.prefixes:
             print(prefix)
+
+def getFile(filename: str, job_id: str):
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(BUCKET_NAME)
+    blob_name = job_id + '/' + filename
+    blob = bucket.blob(blob_name)
+    contents = blob.download_as_string()
+    return contents
+
