@@ -1,8 +1,10 @@
 from bisect import bisect
 import bisect
 import queue
-
+import time
 from google.cloud import datastore, storage
+from google.cloud.exceptions import Conflict
+
 
 def reducer(event, context):
 
@@ -63,7 +65,7 @@ def reducer(event, context):
 
     # we need to update job document to say that the reducer is done
 
-     # go to datastore (jobs) in order to update the job
+    # go to datastore (jobs) in order to update the job
     with datastore_client.transaction():
         # Create a key for an entity of kind "Task", and with the supplied
         # `task_id` as its Id
@@ -77,8 +79,16 @@ def reducer(event, context):
             raise ValueError(f"Job {job_id} does not exist.")
 
         job["sorting_done"] = True
-        datastore_client.put(job)
 
+        for _ in range(5):
+            try:
+                datastore_client.put(job)
+                time.sleep(5)
+                break
+            except Conflict:
+                continue
+            else:
+                print("Transaction failed.")
 
 def reduce(sorted1, sorted2):
     # Declaring a map.

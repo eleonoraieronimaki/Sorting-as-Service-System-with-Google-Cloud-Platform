@@ -1,7 +1,12 @@
 from google.cloud import datastore, storage
+from google.cloud import pubsub_v1
+
 import string
 
 def palindrome_worker(event, context):
+
+    publisher = pubsub_v1.PublisherClient()
+    PROJECT_ID = 'saas-0101'
 
     datastore_client = datastore.Client()
 
@@ -77,8 +82,17 @@ def palindrome_worker(event, context):
                 count_false += 1
         
         if count_false == 1:
-            job["palindrome_done"] = True
-            datastore_client.put(job)
+            topic_path = "palindrome_reducer"
+            data = f""
+
+            data = data.encode("utf-8")
+            # Publishes a message
+            try:
+                publish_future = publisher.publish(topic_path, data=data, job=job_id, obj=blob_name)
+                publish_future.result()  # Verify the publish succeeded
+            except Exception as e:
+                print(e)
+                return (e, 500)
 
 
     # update worker document
