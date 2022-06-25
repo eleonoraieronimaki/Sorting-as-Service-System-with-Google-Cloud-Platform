@@ -1,5 +1,6 @@
 from google.cloud import datastore, storage
 from google.cloud import pubsub_v1
+from google.cloud.exceptions import Conflict
 import time
 import string
 
@@ -50,17 +51,35 @@ def palindrome_worker(event, context):
     query_results = list(query.fetch())
 
     me = query_results[0]
-    
+    key = me.id
     # set our worker document to done, we will store it in the end
     me["done"] = True
 
     me["count"] = results[0]
     me["longest"] = results[1]
     me["word"] = results[2]
-
+    
     if not worker_id == 0:
         # update worker document
-        datastore_client.put(me)
+        for i in range(5):
+            try:
+                with datastore_client.transaction():
+                    key = datastore_client.key(
+                        "palindrome_worker", key
+                    )
+                    worker = datastore_client.get(key)
+                    if worker:
+                        # worker = datastore.Entity(key)
+                        worker.update({"count": results[0], "longest": results[1], "word": results[2], "done": True})
+                        print(worker)
+                        datastore_client.put(worker)
+                        return
+                time.sleep(2)
+                break
+            except Conflict:
+                continue
+            except Exception:
+                continue
         return
     
     # go to datastore (jobs) in order to update the job

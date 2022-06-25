@@ -81,12 +81,31 @@ def sort_worker(event, context):
     results = list(query.fetch())
 
     me = results[0]
+    key = me.id
     
     # set our worker document to done, we will store it in the end
     me["done"] = True
 
     if not worker_id == 0:
-        datastore_client.put(me)
+        for i in range(5):
+            try:
+                with datastore_client.transaction():
+                    key = datastore_client.key(
+                        "sort_worker", key
+                    )
+                    worker = datastore_client.get(key)
+                    if worker:
+                        # worker = datastore.Entity(key)
+                        worker.update({"done": True})
+                        print(worker)
+                        datastore_client.put(worker)
+                        return
+                time.sleep(2)
+                break
+            except Conflict:
+                continue
+            except Exception:
+                continue
         return
 
     # go to datastore (jobs) in order to update the job
