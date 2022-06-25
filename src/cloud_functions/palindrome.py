@@ -1,6 +1,6 @@
 from google.cloud import datastore, storage
 from google.cloud import pubsub_v1
-
+import time
 import string
 
 def palindrome_worker(event, context):
@@ -58,6 +58,11 @@ def palindrome_worker(event, context):
     me["longest"] = results[1]
     me["word"] = results[2]
 
+    if not worker_id == 0:
+        # update worker document
+        datastore_client.put(me)
+        return
+    
     # go to datastore (jobs) in order to update the job
     with datastore_client.transaction():
         # Create a key for an entity of kind "Task", and with the supplied
@@ -71,15 +76,18 @@ def palindrome_worker(event, context):
         if not job:
             raise ValueError(f"Job {job_id} does not exist.")
 
+        count_false = -1
+        
+        while not count_false == 1:
+            time.sleep(2)
+            query = datastore_client.query(kind="palindrome_worker")
+            query.add_filter("job_id", "=", int(job_id))
+            query_results = list(query.fetch())
 
-        query = datastore_client.query(kind="palindrome_worker")
-        query.add_filter("job_id", "=", int(job_id))
-        query_results = list(query.fetch())
-
-        count_false = 0
-        for work in query_results:
-            if not work["done"]:
-                count_false += 1
+            count_false = 0
+            for work in query_results:
+                if not work["done"]:
+                    count_false += 1
         
         if count_false == 1:
             topic_path = publisher.topic_path(PROJECT_ID, "palindrome_reducer")
