@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+   <!-- CSS only -->
+   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet"
+      integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+   <!-- JavaScript Bundle with Popper -->
+   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2"
+      crossorigin="anonymous"></script>
+   <h2 style="text-align:center;">Welcome to SaaS!</h2>
+</head>
+
+<body>
+   <br>
+   <div class="container">
+      <form action="/uploader" method="POST" name="file" enctype="multipart/form-data">
+         <input type="file" name="file" />
+         <input type="hidden" name="chunk" value="1000">
+         <input type="hidden" name="form" value="file_form_input">
+         <input type="submit" value="Upload"  />
+      </form>
+      <br>
+      {% if job_id %}
+      <h3> Job Id: {{ job_id }}</h3>
+      {% endif %}
+      <br>
+      <form name="job" action="/uploader" method="POST">
+         <label for="search">
+            <h3>Search job ID here:</h3>
+         </label>
+         <input type="text" id="searchid" name="searchid" />
+         <input type="hidden" name="form" value="job_form_input">
+         <input type="submit" value="Submit" />
+      </form>
+   </div>
+   <br>
+   <div class="content">
+      {% block content %}
+      {% endblock %}
+   </div>
+</body>
+
+</html>

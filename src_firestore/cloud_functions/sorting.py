@@ -1,7 +1,7 @@
 import json
-import time
+import random, time
 from google.cloud import pubsub_v1
-from google.cloud import datastore, storage
+from google.cloud import datastore, storage, firestore
 from google.cloud.exceptions import Conflict
 
 
@@ -27,11 +27,13 @@ def sort_worker(event, context):
         None. The output is written to Cloud Logging.
     """
     publisher = pubsub_v1.PublisherClient()
-    PROJECT_ID = 'saas-0101'
-    datastore_client = datastore.Client()
+    PROJECT_ID = 'rich-crowbar-354417'
+
+
+    client = firestore.Client()
 
     # The ID of your GCS bucket
-    bucket_name = "saas-docs"
+    bucket_name = "test-project-docs"
 
     # The attributes in message
     attributes = event["attributes"]
@@ -39,11 +41,12 @@ def sort_worker(event, context):
     # The ID of your GCS object
     blob_name = attributes["obj"]
 
-    
+    print(blob_name)
     job_id = attributes["job"]
     start_offset = int(attributes["start_offset"])
     end_offset = int(attributes["end_offset"])
-    worker_id = int(attributes["worker_id"])
+    worker_id = attributes["worker_id"]
+    worker_idjob = job_id + attributes["worker_id"]
 
     # Get storage client
     storage_client = storage.Client()
@@ -66,7 +69,7 @@ def sort_worker(event, context):
     ch = '.'
     dot_idx = [i for i, ltr in enumerate(blob_parts[-1]) if ltr == ch]
     last_dot = dot_idx[-1]
-    new_name = blob_parts[-1][:last_dot] + "_worker_" + str(worker_id) + blob_parts[-1][last_dot:]
+    new_name = blob_parts[-1][:last_dot] + "_worker_" + str(worker_idjob) + blob_parts[-1][last_dot:]
     destination_name = blob_parts[0] + "/sort_results/" + new_name
 
     # store the result
@@ -75,66 +78,28 @@ def sort_worker(event, context):
 
     start_reduce = False
 
-    query = datastore_client.query(kind="sort_worker")
-    query.add_filter("job_id", "=", int(job_id))
-    query.add_filter("worker_num", "=", int(worker_id))
-    results = list(query.fetch())
+    doc_ref = client.collection(u'sort_worker').document(u'' + worker_idjob)
+    doc_ref.update({
+        'done': True
+    })
 
-    me = results[0]
-    key = me.id
-    
-    # set our worker document to done, we will store it in the end
-    me["done"] = True
 
-    if not worker_id == 0:
-        for i in range(5):
-            try:
-                with datastore_client.transaction():
-                    key = datastore_client.key(
-                        "sort_worker", key
-                    )
-                    worker = datastore_client.get(key)
-                    if worker:
-                        # worker = datastore.Entity(key)
-                        worker.update({"done": True})
-                        print(worker)
-                        datastore_client.put(worker)
-                        return
-                time.sleep(2)
-                break
-            except Conflict:
-                continue
-            except Exception:
-                continue
-        return
-
-    # go to datastore (jobs) in order to update the job
-    with datastore_client.transaction():
-        # Create a key for an entity of kind "Task", and with the supplied
-        # `task_id` as its Id
-        key = datastore_client.key("Job", int(job_id))
-
-        # Use that key to load the entity
-        job = datastore_client.get(key)
-
-        # check if job exists. It should never go here..
-        if not job:
-            raise ValueError(f"Job {job_id} does not exist.")
-
+    if worker_id == '0':
+        # initialize variable, only need for the first time
         count_false = -1
-        
-        while not count_false == 1:
-            time.sleep(2)
-            query = datastore_client.query(kind="sort_worker")
-            query.add_filter("job_id", "=", int(job_id))
-            results = list(query.fetch())
+        # while the not done workers are more than 1
+        # because worker 0 will update their own document in the end of this
+        while count_false != 0:
+            query = client.collection(u'sort_worker')
+            query_results = query.where(u'job_id', u'==', u''+job_id).stream()
 
             count_false = 0
-            for work in results:
-                if not work["done"]:
+            for work in query_results:
+                tmp = work.to_dict()
+                if not tmp["done"]:
                     count_false += 1
         
-        if count_false == 1:
+        if count_false == 0:
             # fix topic
             topic_path = publisher.topic_path(PROJECT_ID, "Reduce")
 
@@ -148,16 +113,3 @@ def sort_worker(event, context):
             except Exception as e:
                 print(e)
                 return (e, 500)
-            
-            # get reduce dict
-            reduce = json.loads(json.dumps(job["reduce"]))
-            
-            # set reduce in the dictionary
-            reduce['running'] = "True"
-
-            # set it in the job
-            job["reduce"] = reduce
-
-            datastore_client.put(job)
-        
-    datastore_client.put(me)

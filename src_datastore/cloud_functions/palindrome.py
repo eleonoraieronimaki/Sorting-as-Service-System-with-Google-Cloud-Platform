@@ -1,7 +1,8 @@
 from google.cloud import datastore, storage
 from google.cloud import pubsub_v1
 from google.cloud.exceptions import Conflict
-import time
+import random, time
+
 import string
 
 def palindrome_worker(event, context):
@@ -51,37 +52,24 @@ def palindrome_worker(event, context):
     query_results = list(query.fetch())
 
     me = query_results[0]
-    key = me.id
+    
     # set our worker document to done, we will store it in the end
     me["done"] = True
 
     me["count"] = results[0]
     me["longest"] = results[1]
     me["word"] = results[2]
-    
-    if not worker_id == 0:
-        # update worker document
-        for i in range(5):
-            try:
-                with datastore_client.transaction():
-                    key = datastore_client.key(
-                        "palindrome_worker", key
-                    )
-                    worker = datastore_client.get(key)
-                    if worker:
-                        # worker = datastore.Entity(key)
-                        worker.update({"count": results[0], "longest": results[1], "word": results[2], "done": True})
-                        print(worker)
-                        datastore_client.put(worker)
-                        return
-                time.sleep(2)
-                break
-            except Conflict:
-                continue
-            except Exception:
-                continue
-        return
-    
+    for _ in range(5):
+        try:
+            # update worker document
+            datastore_client.put(me)
+            break
+        except Conflict:
+            n = random.randint(1, 3)
+            time.sleep(n)
+            continue
+
+
     # go to datastore (jobs) in order to update the job
     with datastore_client.transaction():
         # Create a key for an entity of kind "Task", and with the supplied
@@ -95,20 +83,26 @@ def palindrome_worker(event, context):
         if not job:
             raise ValueError(f"Job {job_id} does not exist.")
 
+        # initialize variable, only need for the first time
         count_false = -1
-        
-        while not count_false == 1:
-            time.sleep(2)
+        # while the not done workers are more than 1
+        # because worker 0 will update their own document in the end of this
+        while count_false != 0:
+            # fetch all palindrome_worker documents
             query = datastore_client.query(kind="palindrome_worker")
             query.add_filter("job_id", "=", int(job_id))
             query_results = list(query.fetch())
 
+            # initialize variable
             count_false = 0
+            # go through workers and check if they are not done
             for work in query_results:
                 if not work["done"]:
+                    # if not done, increase variable
                     count_false += 1
+            
         
-        if count_false == 1:
+        if count_false == 0 and worker_id == 0:
             topic_path = publisher.topic_path(PROJECT_ID, "palindrome_reducer")
 
             data = f""
@@ -121,10 +115,6 @@ def palindrome_worker(event, context):
             except Exception as e:
                 print(e)
                 return (e, 500)
-
-
-    # update worker document
-    datastore_client.put(me)
 
 def palindrome(section):
     count = 0

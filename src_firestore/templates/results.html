@@ -1,0 +1,55 @@
+{% extends 'form.html' %}
+
+{% block content %}
+{% if sorting %}
+<div class="container">
+<table style="width:40%">
+    <tr>
+        <td>
+            <h3>Sorting (%)</h3>
+        </td>
+        <td>{{sorting}}</td>
+    </tr>
+    <tr>
+        <td>
+            <h3>Palindromes (%)</h3>
+        </td>
+        <td>{{palindrome}}</td>
+    </tr>
+    {% if done %}
+    <tr>
+        <td>
+            <h3>Number of palindromes</h3>
+        </td>
+        <td>{{n_palindrome}}</td>
+    </tr>
+    <tr>
+        <td>
+            <h3>Longest palindrome</h3>
+        </td>
+        <td>{{longest}}</td>
+    </tr>
+    <tr>
+        <td>
+            <h3>Size palindrome</h3>
+        </td>
+        <td>{{size}}</td>
+    </tr>
+    {% endif %}
+    </tr>
+</table>
+</div>
+{% endif %}
+</br></br>
+{% if done %}
+<div class="container">
+    <h2> Total Run Time: {{ elapsed }} seconds</h2>
+    <form name="download" action="uploader" method="POST">
+        <label><h2> You can download your file here: </h2></label>
+        <input type="hidden" name="searchid" value={{searchid}}>
+        <input type="hidden" name="form" value="download">
+        <input type="submit" value="Download" />
+    </form>
+</div>
+{% endif %}
+{% endblock %}

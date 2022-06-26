@@ -22,7 +22,7 @@ def upload_file():
         # print()
         # return "hello"
         if request.form["form"] == "file_form_input":
-
+            print("HIIII")
             print(request.files['file'].filename)
             if request.files['file'].filename == '':
                 return "No file uploaded"
@@ -30,6 +30,7 @@ def upload_file():
             filename = request.files['file'].filename
             content = request.files['file'].read()
             content = content.decode("utf-8")
+            print(content)
             offsets = create_offsets(content, SORT_CHUNK)
             result = handle_storage(filename=filename, content=content, chunk_sort=SORT_CHUNK, chunk_palindrome=PALINDROME_CHUNK, num_offsets=len(offsets))
             job_id = result[0]
