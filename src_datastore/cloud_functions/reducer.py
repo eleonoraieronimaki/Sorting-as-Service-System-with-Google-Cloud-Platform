@@ -31,7 +31,6 @@ def reducer(event, context):
     reducer["job_id"] = int(job_id)
     reducer["perc"] = 0
     datastore_client.put(reducer)
-    print("Reducer created")
     # Get storage client
     storage_client = storage.Client()
     # The bucket for retrieving objects
@@ -40,7 +39,6 @@ def reducer(event, context):
     prefix = str(job_id) + '/' + 'sort_results/'
 
     blobs = storage_client.list_blobs(bucket_name, prefix=prefix, delimiter=None)
-    print("blobs", blobs)
     q = queue.Queue()
 
     docs = []
@@ -49,7 +47,6 @@ def reducer(event, context):
         contents = obj.download_as_string().decode("utf-8")
         q.put(contents)
         docs.append(contents)
-    print("docs", docs)
     total = q.qsize()
 
     while q.qsize() > 2:
@@ -66,7 +63,6 @@ def reducer(event, context):
         reducer["perc"] = perc
         datastore_client.put(reducer)
 
-    print(q.qsize())
     final = ''
     if q.qsize() > 1:
 
@@ -105,7 +101,6 @@ def reducer(event, context):
 
         for i in range(10):
             try:
-                print(i)
                 time.sleep(5)
                 datastore_client.put(job)
                 break
