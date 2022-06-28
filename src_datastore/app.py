@@ -16,21 +16,14 @@ def form():
 @app.route('/uploader', methods = ['GET', 'POST'])
 def upload_file():
 
-    print("I Am here")
-    print(request.form)
     if request.method == 'POST':
-        # print()
-        # return "hello"
         if request.form["form"] == "file_form_input":
-            print("HIIII")
-            print(request.files['file'].filename)
             if request.files['file'].filename == '':
                 return "No file uploaded"
             
             filename = request.files['file'].filename
             content = request.files['file'].read()
             content = content.decode("utf-8")
-            print(content)
             offsets = create_offsets(content, SORT_CHUNK)
             result = handle_storage(filename=filename, content=content, chunk_sort=SORT_CHUNK, chunk_palindrome=PALINDROME_CHUNK, num_offsets=len(offsets))
             job_id = result[0]
@@ -93,13 +86,6 @@ def upload_file():
 
     return render_template('results.html')
 
- 
-@app.route('/index/', methods = ['POST', 'GET'])
-def data():
-    client = datastore.create_client()
-    content = datastore.list_documents(client=client)
-    print(content)
-    return "hello"
 
 def handle_storage(filename: str, content: str, chunk_sort: int, chunk_palindrome: int, num_offsets: int):
     job_id = datastore.add_job(filename, content, chunk_sort, chunk_palindrome, num_offsets)
@@ -158,7 +144,6 @@ def job_statistics(job, workers, reducers):
     for worker in palindrome_workers:
         if worker["done"]:
             palindrome_perc += per_worker
-    print(palindrome_perc)
     sorting_perc = 0
     # the other 50% is for the sort reducer
     per_worker = 50 / len(sort_workers)

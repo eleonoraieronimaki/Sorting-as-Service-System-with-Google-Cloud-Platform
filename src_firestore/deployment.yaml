@@ -35,7 +35,7 @@ spec:
       - name: saas-app
         # Replace $LOCATION with your Artifact Registry location (e.g., us-west1).
         # Replace $GCLOUD_PROJECT with your project ID.
-        image: europe-west4-docker.pkg.dev/rich-crowbar-354417/saas-repo/saas-app:v2
+        image: europe-west4-docker.pkg.dev/rich-crowbar-354417/saas-repo/saas-app
         volumeMounts:
         - name: google-cloud-key
           mountPath: /var/secrets/google

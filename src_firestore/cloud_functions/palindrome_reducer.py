@@ -38,7 +38,6 @@ def palindrome_reducer(event, context):
     index = 0
     for i in query_results.stream():
         worker = i.to_dict()
-        print(worker)
         if worker["longest"] > longest:
             longest = worker["longest"]
             word = worker["word"]

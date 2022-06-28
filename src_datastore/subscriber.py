@@ -2,9 +2,6 @@ import os
 from google.cloud import pubsub_v1
 from concurrent.futures import TimeoutError
 
-credentials = '/Users/eleon/Desktop/Leiden University/Semester 2/Cloud Computing/Assignment 2/assignment2_cc/saas-0101.json'
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials
-
 timeout = 5.0 
 
 subscriber = pubsub_v1.SchemaServiceClient()

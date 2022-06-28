@@ -41,7 +41,6 @@ def sort_worker(event, context):
     # The ID of your GCS object
     blob_name = attributes["obj"]
 
-    print(blob_name)
     job_id = attributes["job"]
     start_offset = int(attributes["start_offset"])
     end_offset = int(attributes["end_offset"])
@@ -111,5 +110,4 @@ def sort_worker(event, context):
                 publish_future = publisher.publish(topic_path, data=data, job=job_id, obj=blob_name)
                 publish_future.result()  # Verify the publish succeeded
             except Exception as e:
-                print(e)
                 return (e, 500)
