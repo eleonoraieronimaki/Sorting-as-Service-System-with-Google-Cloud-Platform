@@ -1,6 +1,4 @@
-# Cloud Computing - Assignment 2
-## Andreas Savva - s3316491<br>
-## Maria Ieronymaki - s3374831
+# Sorting as Service System with Google Cloud Platform
 
 ## Description
 This is the final assignment of the Cloud Computing course, Leiden University, 2022. In the asignment we had to create a sorting as a service system for files larger than 10MB, using the Google Cloud services. The application uses Flask for the front end which is deployed in Google Kubernetes Cluster and 4 Cloud Functions which are triggered using Pub/Sub messaging. In addition it uses Google Cloud Storage for storing the text files and Google Firestore as a database for job descriptions. We also provide an implementation using the Google Datastore db but it has conflict issues.
